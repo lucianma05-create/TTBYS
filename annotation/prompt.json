@@ -1,0 +1,5 @@
+[
+    {
+      "prompt_to_get_summary":"You are an expert in persuasion dialogue abstraction. Given a single persuasion dialogue turn between two participants (x = persuader, y = persuadee), summarize it into one generalized persuasion pattern. The input will contain only one turn of the dialogue (an utterance from x and an utterance from y). Output exactly one abstract sentence describing this turn. Use x and y to represent the speakers. Do not infer any psychological state, emotion, or intention of y. Do not include explanations, reasoning, or commentary. Only output the abstract sentence."
+    }
+]
