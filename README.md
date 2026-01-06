@@ -1,7 +1,7 @@
 # TTBYS: Think Thrice Before You Speak
 **Enhancing Theory-of-Mind Reasoning in Persuasive Agents**
 
-This repository implements **TTBYS**, a multi-turn persuasive dialogue system designed to enhance Theory-of-Mind (ToM) reasoning in agents by leveraging **structured past experiences**. The system follows a **three-step reasoning framework** inspired by human deliberative cognition:
+This repository implements **TTBYS**, a framework designed to enhance Theory-of-Mind (ToM) reasoning in persuasive agents by leveraging **structured ToM experiences**. The system follows a **three-step reasoning framework** inspired by human deliberative cognition:
 
 1. **First Think — Desire Inference**  
    Predict the persuadee’s desire toward the target action using both LLM-driven intuition and experience-driven implicit knowledge.
