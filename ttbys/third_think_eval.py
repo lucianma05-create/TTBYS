@@ -1,34 +1,21 @@
+"""Evaluate Third Think: accuracy of AG/EX strategy fusion vs alpha.
+
+Reads the output of third_think.py (persuader turns annotated with
+third_think_ag / third_think_ex) and plots accuracy of
+fused = alpha * ag + (1 - alpha) * ex for alpha in [0, 1].
+"""
+import argparse
 import json
-import numpy as np
+from pathlib import Path
+
 import matplotlib.pyplot as plt
-from tqdm import tqdm
+import numpy as np
 
-# =============================
-# Configuration
-# =============================
-NUM = 400
-DATA_PATH = ""  # Input dataset path
-OUTPUT_FIG = "third_think_acc.png"  # Output figure path
+import config
 
-STRATEGIES = [
-    "Expression of views",
-    "Logical appeal",
-    "Enhancement of views",
-    "Task inquiry",
-    "Personal story",
-    "Affirmation and reassurance",
-    "Reflection of feelings",
-    "Supplying information",
-    "Giving Examples"
-]
 
-# =============================
-# Load data
-# =============================
 def load_data(path):
-    """
-    Load persuader turns with ground truth strategies and AG/EX predictions.
-    """
+    """Load persuader turns with ground-truth strategies and AG/EX predictions."""
     with open(path, "r", encoding="utf-8") as f:
         data = json.load(f)
 
@@ -43,29 +30,22 @@ def load_data(path):
                     samples.append((gt_strategies, np.array(ag_prob), np.array(ex_prob)))
     return samples
 
-# =============================
-# Compute fusion accuracy
-# =============================
+
 def calc_accuracy(samples, alpha):
-    """
-    Compute accuracy after fusing AG and EX strategy probabilities with weight alpha.
-    """
+    """Compute accuracy after fusing AG and EX strategy probabilities with weight alpha."""
     correct = 0
     total = 0
     for gt_strategies, ag_prob, ex_prob in samples:
         fused = alpha * ag_prob + (1 - alpha) * ex_prob
-        pred_idx = np.argmax(fused)
-        pred_strategy = STRATEGIES[pred_idx]
+        pred_strategy = config.STRATEGIES[int(np.argmax(fused))]
         if pred_strategy in gt_strategies:
             correct += 1
         total += 1
     return correct / total if total > 0 else 0.0
 
-# =============================
-# Main workflow
-# =============================
-def main():
-    samples = load_data(DATA_PATH)
+
+def main(args):
+    samples = load_data(args.result)
     print(f"Loaded {len(samples)} persuader turns for evaluation.\n")
 
     alphas = np.arange(0, 1.01, 0.1)
@@ -78,13 +58,30 @@ def main():
 
     # Plot accuracy curve
     plt.figure(figsize=(8, 5))
-    plt.plot(alphas, accuracies, marker='o')
+    plt.plot(alphas, accuracies, marker="o")
     plt.xlabel("Fusion Parameter α")
     plt.ylabel("Strategy Prediction Accuracy")
     plt.title("Accuracy vs Fusion Parameter α")
     plt.grid(True)
-    plt.savefig(OUTPUT_FIG, dpi=300)
-    print(f"\nAccuracy curve saved to: {OUTPUT_FIG}\n")
+    Path(args.out_fig).parent.mkdir(parents=True, exist_ok=True)
+    plt.savefig(args.out_fig, dpi=300)
+    print(f"\nAccuracy curve saved to: {args.out_fig}\n")
+
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(
+        description="Evaluate Third Think (strategy prediction) fusion accuracy."
+    )
+    parser.add_argument(
+        "--result",
+        type=str,
+        default=str(config.THIRD_THINK_OUTPUT),
+        help="Output file of third_think.py",
+    )
+    parser.add_argument(
+        "--out-fig",
+        type=str,
+        default=str(config.OUTPUT_DIR / "third_think_acc.png"),
+        help="Output figure path",
+    )
+    main(parser.parse_args())
