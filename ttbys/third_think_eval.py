@@ -23,7 +23,11 @@ def load_data(path):
     for conv in data:
         for turn in conv["dialog"]:
             if turn["speaker"] == "persuader":
-                gt_strategies = turn["annotation"].get("strategy", [])
+                gt_strategies = {
+                    normalized
+                    for strategy in turn["annotation"].get("strategy", [])
+                    if (normalized := config.normalize_strategy(strategy)) is not None
+                }
                 ag_prob = turn.get("third_think_ag", [])
                 ex_prob = turn.get("third_think_ex", [])
                 if gt_strategies and ag_prob and ex_prob:

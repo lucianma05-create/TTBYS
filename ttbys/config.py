@@ -87,6 +87,18 @@ STRATEGIES = [
 
 STRATEGY_TOKENS = ["V", "L", "E", "T", "P", "A", "R", "I", "G"]  # single-letter labels
 
+# Dataset annotations contain harmless capitalization variants (for example,
+# "expression of views" and "Giving examples").  Keep one canonical label
+# space so retrieval and evaluation do not silently discard those examples.
+_STRATEGY_BY_CASEFOLD = {strategy.casefold(): strategy for strategy in STRATEGIES}
+
+
+def normalize_strategy(strategy):
+    """Return a canonical strategy label, or ``None`` when it is unknown."""
+    if not isinstance(strategy, str):
+        return None
+    return _STRATEGY_BY_CASEFOLD.get(strategy.strip().casefold())
+
 DESIRE_ORDER = [-1, 0, 1]                      # unwilling / uncertain / willing
 DESIRE_MAP = {-1: "unwilling", 0: "uncertain", 1: "willing"}
 DESIRE_TOKEN_MAP = {-1: " A", 0: " B", 1: " C"}

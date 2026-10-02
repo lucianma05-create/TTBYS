@@ -56,10 +56,13 @@ Output ONLY a number in {{0, 0.5, 1}}.
         r = requests.post(f"{api_host}/chat/completions", headers=headers, json=body, timeout=60)
         r.raise_for_status()
         output = r.json()["choices"][0]["message"]["content"].strip()
-        return float(output)
+        score = float(output)
+        if score not in {0.0, 0.5, 1.0}:
+            raise ValueError(f"judge returned an invalid score: {output!r}")
+        return score
     except (requests.RequestException, ValueError, KeyError, IndexError) as e:
-        print(f"Warning: scoring request failed ({e}); scoring this sample as 0.0")
-        return 0.0
+        print(f"Warning: scoring request failed ({e}); excluding this sample")
+        return None
 
 
 def evaluate_dialog(dialog, stats, args):
@@ -73,6 +76,9 @@ def evaluate_dialog(dialog, stats, args):
                 score = call_gpt_belief_score(
                     gt_belief, pred_belief, args.api_host, args.api_key, args.model
                 )
+                if score is None:
+                    stats["failed_requests"] += 1
+                    continue
             else:
                 score = 0.0
 
@@ -84,13 +90,17 @@ def main(args):
         raise SystemExit(
             "No API host set. Pass --api-host or fill EVAL_API_HOST in config.py."
         )
+    if not args.api_key:
+        raise SystemExit(
+            "No API key set. Pass --api-key or fill EVAL_API_KEY in config.py."
+        )
 
     with open(args.input, "r", encoding="utf-8") as f:
         data = json.load(f)
 
     print(f"Processing {len(data)} dialogs...\n")
 
-    stats = {"belief_scores": []}
+    stats = {"belief_scores": [], "failed_requests": 0}
 
     for sample in tqdm(data, desc="Evaluating dialogs"):
         evaluate_dialog(sample["dialog"], stats, args)
@@ -101,6 +111,8 @@ def main(args):
         if stats["belief_scores"] else 0
     )
     print(f"\nBelief Accuracy (mean score): {belief_acc:.3f}")
+    print(f"Scored samples: {len(stats['belief_scores'])}")
+    print(f"Excluded failed API requests: {stats['failed_requests']}")
 
 
 if __name__ == "__main__":

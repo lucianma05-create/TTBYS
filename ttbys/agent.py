@@ -61,7 +61,9 @@ def main():
     with open(config.DATA_PATH, "r", encoding="utf-8") as f:
         raw_data = json.load(f)
 
-    db = build_experience_db(raw_data[config.MAX_DB_SKIP:])
+    # Keep the online experience KB consistent with the offline modules:
+    # the first MAX_EVAL_DIALOGS items are held out for evaluation.
+    db = build_experience_db(raw_data[config.MAX_EVAL_DIALOGS:])
     db_contexts = [d.get("context", "") + " " + d.get("current_belief", "") for d in db]
     db_embeddings = common.embed_texts(db_contexts) if db_contexts else None
     print(f"Experience DB size: {len(db)}")

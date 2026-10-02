@@ -89,8 +89,9 @@ def compute_strategy_prob_ex(topk_entries):
     counter = Counter()
     for entry in topk_entries:
         for strat in entry["strategy"]:
-            if strat in config.STRATEGIES:
-                counter[strat] += 1
+            canonical_strategy = config.normalize_strategy(strat)
+            if canonical_strategy is not None:
+                counter[canonical_strategy] += 1
     total = sum(counter.values())
     if total == 0:
         return [1 / len(config.STRATEGIES)] * len(config.STRATEGIES)
